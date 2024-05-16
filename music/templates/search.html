@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Similar Song Search</title>
+<style>
+    html, body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+    header {
+        background-color: #333;
+        color: white;
+        padding: 15px 0;
+        text-align: center;
+    }
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+    input[type="text"] {
+        width: calc(100% - 40px);
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #333;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #555;
+    }
+    .loader {
+        display: none;
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #333;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Music Recommendation System</h1>
+</header>
+<div class="container">
+    <input type="text" id="songName" placeholder="Enter a song name">
+    <button id="searchButton">Search</button>
+    <div class="loader" id="loader"></div>
+    <table id="songTable">
+        <thead>
+            <tr>
+                <th>Song Name</th>
+                <th>Album Name</th>
+                <th>Artist Name</th>
+                <th>Release Year</th>
+                <th>Ratings</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script>
+    document.getElementById("searchButton").addEventListener("click", function() {
+        const songName = document.getElementById("songName").value.trim();
+        if (songName === "") {
+            alert("Please enter a song name.");
+            return;
+        }
+        document.getElementById("searchButton").disabled = true;
+        showLoader();
+        fetch("/search", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text: songName })
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("searchButton").disabled = false;
+                hideLoader();
+                const tableBody = document.querySelector("#songTable tbody");
+                tableBody.innerHTML = "";
+                data.songs.forEach(song => {
+                    const row = `
+                        <tr>
+                            <td>${song.song_name}</td>
+                            <td>${song.album_name}</td>
+                            <td>${song.artist_name}</td>
+                            <td>${song.release_year}</td>
+                            <td>${song.ratings}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => {
+                document.getElementById("searchButton").disabled = false;
+                hideLoader();
+                alert("Something went wrong!");
+            });
+    });
+
+    function showLoader() {
+        document.getElementById("loader").style.display = "block";
+    }
+
+    function hideLoader() {
+        document.getElementById("loader").style.display = "none";
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Recommendation System</title>
+<style>
+    html, body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+    header {
+        background-color: #333;
+        color: white;
+        padding: 15px 0;
+        text-align: center;
+    }
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 0 20px;
+    }
+    .filter {
+        margin-bottom: 10px;
+    }
+    .selected-types {
+        margin-bottom: 10px;
+        display: flex;
+    }
+    .selected-types ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+    .selected-types li {
+        display: inline-block;
+        background-color: #f2f2f2;
+        color: #333;
+        padding: 5px 10px;
+        margin-right: 5px;
+        border-radius: 5px;
+        position: relative;
+    }
+    .selected-types li:hover {
+        cursor: pointer;
+        background-color: #ddd;
+    }
+    .selected-types li .close {
+        margin-left: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    button {
+        padding: 8px 20px;
+        font-size: 16px;
+        background-color: #333;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    .blur-backgroud{
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 998;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+    .custom-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        width: 400px;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        z-index: 999;
+    }
+
+    .custom-popup h2 {
+        margin-top: 0;
+    }
+
+    .custom-popup button {
+        padding: 8px 20px;
+        font-size: 16px;
+        background-color: #333;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 10px;
+        float: right;
+    }
+    .loader {
+        display: none;
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #333;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Music Recommendation System</h1>
+</header>
+<div class="container">
+    <div class="filter">
+        <label for="language">Language:</label>
+        <select id="language">
+            <option value="none">None</option>
+            <option value="hindi">Hindi</option>
+            <option value="english">English</option>
+            <option value="spanish">Spanish</option>
+            <option value="french">French</option>
+            <option value="japanese">Japanese</option>
+            <option value="korean">Korean</option>
+            <option value="punjabi">Punjabi</option>
+        </select>
+        <label for="genre">Genre:</label>
+        <select id="genre">
+            <option value="none">None</option>
+            <option value="pop">Pop</option>
+            <option value="rock">Rock</option>
+            <option value="hiphop">Hip Hop</option>
+            <option value="edm">EDM</option>
+            <option value="jazz">Jazz</option>
+            <option value="latin">Latin</option>
+            <option value="classical">Classical</option>
+        </select>
+        <label for="mood">Mood:</label>
+        <select id="mood">
+            <option value="none">None</option>
+            <option value="blissful">Blissful</option>
+            <option value="nostalgic">Nostalgic</option>
+            <option value="mysterious">Mysterious</option>
+            <option value="whimsical">Whimsical</option>
+            <option value="triumphant">Triumphant</option>
+            <option value="playful">Playful</option>
+            <option value="dreamy">Dreamy</option>
+            <option value="soulful">Soulful</option>
+            <option value="introspective">Introspective</option>
+            <option value="groovy">Groovy</option>
+            <option value="happy">Happy</option>
+            <option value="sad">Sad</option>
+        </select>
+    </div>
+    <div class="selected-types">
+        <ul id="selectedLanguages"></ul>
+        <ul id="selectedGenres"></ul>
+        <ul id="selectedMoods"></ul>
+    </div>
+    <button id="findButton">Find</button>
+    <div class="loader" id="loader"></div>
+    <table id="songTable">
+        <thead>
+            <tr>
+                <th>Song Name</th>
+                <th>Album Name</th>
+                <th>Artist Name</th>
+                <th>Release Year</th>
+                <th>Ratings</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<div class="blur-backgroud" id="customBlur">
+    <div class="custom-popup" id="customPopup">
+        <h2>Error</h2>
+        <p id="popupMessage"></p>
+        <button onclick="closePopup()">OK</button>
+    </div>
+</div>
+<script>
+    const selectedLanguagesElement = document.getElementById("selectedLanguages");
+    const selectedGenresElement = document.getElementById("selectedGenres");
+    const selectedMoodsElement = document.getElementById("selectedMoods");
+    const maxLanguages = 3;
+    const maxGenres = 5;
+    const maxMoods = 3;
+
+    const selectedLanguages = new Set();
+    const selectedGenres = new Set();
+    const selectedMoods = new Set();
+
+    function addSelectedType(type, listElement, maxCount, set) {
+        const value = document.getElementById(type).value;
+
+        if (value === "none" || set.has(value)) {
+            return;
+        }
+
+        if(set.size >= maxCount){
+           alert(`You can only select up to ${maxCount} ${type}.`);
+           return;
+        }
+
+        set.add(value);
+        const li = document.createElement("li");
+        li.textContent = value;
+        const closeIcon = document.createElement("span");
+        closeIcon.innerHTML = "&times;";
+        closeIcon.className = "close";
+        closeIcon.addEventListener("click", function() {
+            set.delete(value);
+            listElement.removeChild(li);
+        });
+        li.appendChild(closeIcon);
+        listElement.appendChild(li);
+    }
+
+    document.getElementById("findButton").addEventListener("click", function() {
+        document.getElementById("findButton").disabled = true;
+        showLoader();
+        const tableBody = document.querySelector("#songTable tbody");
+        tableBody.innerHTML = "";
+        const selectedData = {
+            languages: Array.from(selectedLanguages),
+            genres: Array.from(selectedGenres),
+            moods: Array.from(selectedMoods)
+        };
+
+        fetch("/get_recommendation", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(selectedData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("findButton").disabled = false;
+                hideLoader();
+                const tableBody = document.querySelector("#songTable tbody");
+                tableBody.innerHTML = "";
+                data.songs.forEach(song => {
+                    const row = `
+                        <tr>
+                            <td>${song.song_name}</td>
+                            <td>${song.album_name}</td>
+                            <td>${song.artist_name}</td>
+                            <td>${song.release_year}</td>
+                            <td>${song.ratings}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => {
+                document.getElementById("findButton").disabled = false;
+                hideLoader();
+                showPopup("Something went wrong!");
+            });
+    });
+
+    document.querySelectorAll(".filter select").forEach(select => {
+        select.addEventListener("change", function() {
+            const type = select.id;
+            if (type === "language") {
+                addSelectedType("language", selectedLanguagesElement, maxLanguages, selectedLanguages);
+            } else if (type === "genre") {
+                addSelectedType("genre", selectedGenresElement, maxGenres, selectedGenres);
+            } else if (type === "mood") {
+                addSelectedType("mood", selectedMoodsElement, maxMoods, selectedMoods);
+            }
+            select.selectedIndex = 0;
+        });
+    });
+    function showPopup(message) {
+        const blur = document.getElementById("customBlur");
+        const popup = document.getElementById("customPopup");
+        const popupMessage = document.getElementById("popupMessage");
+
+        popupMessage.textContent = message;
+        popup.style.display = "block";
+        blur.style.display = "block";
+    }
+
+    function closePopup() {
+        const blur = document.getElementById("customBlur");
+        const popup = document.getElementById("customPopup");
+        popup.style.display = "none";
+        blur.style.display = "none";
+    }
+
+    function addSelectedType(type, listElement, maxCount, set) {
+        const value = document.getElementById(type).value;
+
+        if (value === "none" || set.has(value)) {
+            showPopup(`You have already selected ${value}.`);
+            return;
+        }
+
+        if(set.size >= maxCount){
+           showPopup(`You can only select up to ${maxCount} ${type}.`);
+           return;
+        }
+
+        set.add(value);
+        const li = document.createElement("li");
+        li.textContent = value;
+        const closeIcon = document.createElement("span");
+        closeIcon.innerHTML = "&times;";
+        closeIcon.className = "close";
+        closeIcon.addEventListener("click", function() {
+            set.delete(value);
+            listElement.removeChild(li);
+        });
+        li.appendChild(closeIcon);
+        listElement.appendChild(li);
+    }
+
+    function showLoader() {
+        document.getElementById("loader").style.display = "block";
+    }
+
+    function hideLoader() {
+        document.getElementById("loader").style.display = "none";
+    }
+
+</script>
+</body>
+</html>
