@@ -22,3 +22,29 @@ The Music Recommendation System utilizes machine learning algorithms to recommen
 ```bash
 git clone https://github.com/your-username/music-recommendation-system.git
 ```
+
+2. Running Server:
+
+```bash
+cd music_reccomendation_system/music
+python -m flask run --port 5000
+```
+
+## Usage
+
+1. Register or login to your account.
+2. Browse music tracks or use the search functionality to find specific tracks.
+3. Listen to music tracks and interact with the application.
+4. Receive personalized music recommendations based on your listening history and preferences.
+5. Enjoy a personalized and engaging music listening experience!
+
+## Development
+
+The development of this Music Recommendation System involved the following technologies and tools:
+
+- **Python Flask**: Backend web framework
+- **HTML/CSS/JavaScript**: Frontend user interface
+- **Jupyter Notebook**: Data exploration and model development
+- **PySCy**: Python library for collaborative filtering
+- **Other machine learning libraries** (e.g., scikit-learn, TensorFlow, PyTorch): Model training and evaluation
+
